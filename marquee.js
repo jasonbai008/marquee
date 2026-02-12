@@ -1,6 +1,6 @@
 /**
  * 纯 JS 走马灯
- * 作者：GPT-5.2 & Jason Bai
+ * 作者：Claude 4 & Jason Bai
  * 原理：把原内容包成一组(group)，再 clone 一份放在后面，动画平移一组的宽度实现无缝循环
  * 示例：const marquee = new Marquee(".marquee", { speed: 90, gap: 12, pauseOnHover: true, direction: "left" })
  *
@@ -18,224 +18,106 @@
  * pauseOnHover: true
  * autoStart: true
  */
-(function () {
-  let uid = 0;
+class Marquee {
+  constructor(selector, options = {}) {
+    this.element =
+      typeof selector === "string"
+        ? document.querySelector(selector)
+        : selector;
+    if (!this.element) return;
 
-  class Marquee {
-    /**
-     * @param {string|HTMLElement} target 选择器或元素
-     * @param {{speed?:number,gap?:number,direction?:'left'|'right',pauseOnHover?:boolean,autoStart?:boolean}} [options]
-     */
-    constructor(target, options) {
-      /** @type {HTMLElement|null} */
-      this.root =
-        typeof target === "string" ? document.querySelector(target) : target;
-      if (!this.root) throw new Error("Marquee: target not found");
+    // 生成唯一ID
+    this.id = "marquee-" + Math.random().toString(36).substr(2, 9);
 
-      this.options = Object.assign(
-        {
-          speed: 80,
-          gap: 16,
-          direction: "left",
-          pauseOnHover: true,
-          autoStart: true,
-        },
-        options || {},
-      );
+    this.options = {
+      speed: 50,
+      gap: 0,
+      pauseOnHover: false,
+      direction: "left",
+      ...options,
+    };
 
-      this.id = `m${++uid}`;
-      this._styleEl = null;
-      this._baseCss = "";
-      this._keyframesCss = "";
-      this._animationName = "";
-      this._trackEl = null;
-      this._groupEl = null;
-      this._cloneEl = null;
-      this._resizeObserver = null;
-      this._started = false;
+    this.init();
+  }
 
-      this._onEnter = null;
-      this._onLeave = null;
+  init() {
+    // 设置容器样式
+    this.element.style.cssText = `
+      overflow: hidden;
+      white-space: nowrap;
+      position: relative;
+    `;
 
-      // 关键：初始化结构（包裹 + 克隆）
-      this._mount();
+    // 创建内容包装器
+    this.wrapper = document.createElement("div");
+    this.wrapper.style.cssText = `
+      display: inline-flex;
+      align-items: center;
+      gap: ${this.options.gap}px;
+      animation-timing-function: linear;
+      animation-iteration-count: infinite;
+    `;
 
-      if (this.options.autoStart) this.start();
-    }
+    // 保存原始内容
+    const originalContent = this.element.innerHTML;
+    this.element.innerHTML = "";
 
-    /**
-     * 开始/恢复
-     */
-    start() {
-      this._started = true;
-      if (this._trackEl) this._trackEl.style.animationPlayState = "running";
-    }
+    // 创建两组内容
+    this.group1 = document.createElement("div");
+    this.group1.style.cssText =
+      "display: inline-flex; align-items: center; gap: inherit;";
+    this.group1.innerHTML = originalContent;
 
-    /**
-     * 暂停
-     */
-    stop() {
-      this._started = false;
-      if (this._trackEl) this._trackEl.style.animationPlayState = "paused";
-    }
+    this.group2 = this.group1.cloneNode(true);
 
-    /**
-     * 重新计算距离与时长
-     */
-    update() {
-      if (!this._trackEl || !this._groupEl) return;
+    this.wrapper.appendChild(this.group1);
+    this.wrapper.appendChild(this.group2);
+    this.element.appendChild(this.wrapper);
 
-      const speed = Math.max(1, Number(this.options.speed) || 80);
-      const gap = Math.max(0, Number(this.options.gap) || 0);
+    // 启动动画
+    this.start();
 
-      // 关键：滚动距离 = 第一组内容宽度 + gap
-      const groupWidth = this._groupEl.getBoundingClientRect().width;
-      const distance = groupWidth + gap;
-
-      if (!distance || !Number.isFinite(distance)) {
-        this._trackEl.style.animation = "none";
-        return;
-      }
-
-      const duration = distance / speed;
-      this._animationName = `marquee_${this.id}`;
-
-      // 原来是：const toX = this.options.direction === "right" ? distance : -distance;
-      const toX = -distance;
-
-      // 原来 keyframes 不变
-      this._keyframesCss = `@keyframes ${this._animationName}{from{transform:translateX(0)}to{transform:translateX(${toX}px)}}`;
-      this._renderStyle();
-
-      this._trackEl.style.animation = `${this._animationName} ${duration}s linear infinite`;
-
-      // 新增这一句：向右时反向播放（从 -distance 开始），避免左侧空白
-      this._trackEl.style.animationDirection =
-        this.options.direction === "right" ? "reverse" : "normal";
-
-      this._trackEl.style.animationPlayState = this._started
-        ? "running"
-        : "paused";
-    }
-
-    /**
-     * 销毁并还原 DOM
-     */
-    destroy() {
-      if (this._resizeObserver) this._resizeObserver.disconnect();
-
-      if (this.root && this._groupEl) {
-        // 关键：把原内容从 group 搬回 root
-        const frag = document.createDocumentFragment();
-        while (this._groupEl.firstChild)
-          frag.appendChild(this._groupEl.firstChild);
-        this.root.innerHTML = "";
-        this.root.appendChild(frag);
-        this.root.style.overflow = "";
-        delete this.root.dataset.marqueeId;
-
-        if (this._onEnter)
-          this.root.removeEventListener("mouseenter", this._onEnter);
-        if (this._onLeave)
-          this.root.removeEventListener("mouseleave", this._onLeave);
-      }
-
-      if (this._styleEl && this._styleEl.parentNode)
-        this._styleEl.parentNode.removeChild(this._styleEl);
-
-      this._styleEl = null;
-      this._trackEl = null;
-      this._groupEl = null;
-      this._cloneEl = null;
-      this._resizeObserver = null;
-      this._started = false;
-      this._onEnter = null;
-      this._onLeave = null;
-    }
-
-    _mount() {
-      const root = this.root;
-
-      root.dataset.marqueeId = this.id;
-
-      // 关键：root 作为 viewport，隐藏溢出
-      root.style.overflow = "hidden";
-
-      const track = document.createElement("div");
-      track.className = "js-marquee-track";
-
-      const group = document.createElement("div");
-      group.className = "js-marquee-group";
-
-      // 关键：把原来的子节点整体搬到 group 内
-      while (root.firstChild) group.appendChild(root.firstChild);
-
-      // 关键：clone 一份 group，形成两组相同内容
-      const clone = group.cloneNode(true);
-      clone.setAttribute("aria-hidden", "true");
-
-      track.append(group, clone);
-      root.appendChild(track);
-
-      this._trackEl = track;
-      this._groupEl = group;
-      this._cloneEl = clone;
-
-      this._baseCss = [
-        `[data-marquee-id="${this.id}"]{position:relative}`,
-        `[data-marquee-id="${this.id}"] .js-marquee-track{display:flex;width:max-content;will-change:transform}`,
-        `[data-marquee-id="${this.id}"] .js-marquee-group{display:flex;align-items:center;white-space:nowrap}`,
-      ].join("");
-
-      this._applyGap();
-      this._renderStyle();
-      this._bindHover();
-      this._bindResize();
-
-      requestAnimationFrame(() => this.update());
-    }
-
-    _applyGap() {
-      const gap = Math.max(0, Number(this.options.gap) || 0);
-      if (this._trackEl) this._trackEl.style.gap = `${gap}px`;
-      if (this._groupEl) this._groupEl.style.gap = `${gap}px`;
-      if (this._cloneEl) this._cloneEl.style.gap = `${gap}px`;
-    }
-
-    _bindHover() {
-      if (!this.options.pauseOnHover || !this.root || !this._trackEl) return;
-
-      const track = this._trackEl;
-
-      this._onEnter = () => {
-        // 关键：悬停暂停
-        track.style.animationPlayState = "paused";
-      };
-      this._onLeave = () => {
-        track.style.animationPlayState = this._started ? "running" : "paused";
-      };
-
-      this.root.addEventListener("mouseenter", this._onEnter);
-      this.root.addEventListener("mouseleave", this._onLeave);
-    }
-
-    _bindResize() {
-      if (!("ResizeObserver" in window) || !this.root) return;
-      this._resizeObserver = new ResizeObserver(() => this.update());
-      this._resizeObserver.observe(this.root);
-    }
-
-    _renderStyle() {
-      if (!this._styleEl) {
-        this._styleEl = document.createElement("style");
-        this._styleEl.setAttribute("data-marquee-style", this.id);
-        document.head.appendChild(this._styleEl);
-      }
-      // 关键：基础样式 + keyframes 一起写入，保证不互相覆盖
-      this._styleEl.textContent =
-        (this._baseCss || "") + (this._keyframesCss || "");
+    // 悬停暂停
+    if (this.options.pauseOnHover) {
+      this.element.addEventListener("mouseenter", () => this.pause());
+      this.element.addEventListener("mouseleave", () => this.resume());
     }
   }
 
-  window.Marquee = Marquee;
-})();
+  start() {
+    const groupWidth = this.group1.offsetWidth + this.options.gap;
+    const duration = groupWidth / this.options.speed;
+
+    const animationName = `${this.id}-${this.options.direction}`;
+    const keyframes =
+      this.options.direction === "left"
+        ? `@keyframes ${animationName} { from { transform: translateX(0); } to { transform: translateX(-${groupWidth}px); } }`
+        : `@keyframes ${animationName} { from { transform: translateX(-${groupWidth}px); } to { transform: translateX(0); } }`;
+
+    // 移除旧样式
+    const oldStyle = document.getElementById(this.id);
+    if (oldStyle) oldStyle.remove();
+
+    // 添加新样式
+    const style = document.createElement("style");
+    style.id = this.id;
+    style.textContent = keyframes;
+    document.head.appendChild(style);
+
+    this.wrapper.style.animation = `${animationName} ${duration}s linear infinite`;
+  }
+
+  pause() {
+    this.wrapper.style.animationPlayState = "paused";
+  }
+
+  resume() {
+    this.wrapper.style.animationPlayState = "running";
+  }
+
+  destroy() {
+    this.wrapper.style.animation = "";
+    const style = document.getElementById(this.id);
+    if (style) style.remove();
+  }
+}
