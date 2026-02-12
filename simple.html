@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>纯 CSS 走马灯</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: sans-serif;
+            padding: 16px;
+        }
+
+        .marquee-viewport {
+            overflow: hidden;
+        }
+
+        .marquee-track {
+            display: flex;
+            gap: 10px;
+            padding: 10px;
+            width: max-content;
+            white-space: nowrap;
+            animation: marquee 14s linear infinite;
+            will-change: transform;
+        }
+
+        .marquee-viewport:hover .marquee-track {
+            animation-play-state: paused;
+        }
+
+        .chip {
+            padding: 6px 10px;
+        }
+
+        @keyframes marquee {
+            from {
+                transform: translateX(0);
+            }
+
+            to {
+                transform: translateX(-50%);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrap">
+        <h1 class="title">纯 CSS 走马灯：两份内容（克隆）实现无缝循环</h1>
+        <p class="desc">
+            原理：在同一条轨道里放两组完全相同的标签（第二组是第一组的克隆），让轨道从 0 滚到 -50%。
+            悬停可暂停。
+        </p>
+        <div class="marquee">
+            <div class="marquee-viewport">
+                <div class="marquee-track">
+                    <!-- 第一组（原始内容） -->
+                    <span class="chip">阅读理解</span>
+                    <span class="chip">写作</span>
+                    <span class="chip">函数</span>
+                    <span class="chip">几何</span>
+                    <span class="chip">概率</span>
+                    <span class="chip">方程</span>
+                    <span class="chip">语法</span>
+                    <span class="chip">词汇</span>
+                    <span class="chip">听力</span>
+                    <span class="chip">力学</span>
+                    <span class="chip">电学</span>
+                    <span class="chip">光学</span>
+                    <span class="chip">方程式</span>
+                    <span class="chip">元素周期</span>
+                    <span class="chip">实验</span>
+                    <span class="chip">遗传</span>
+                    <span class="chip">细胞</span>
+                    <span class="chip">生态</span>
+                    <span class="chip">近代史</span>
+                    <span class="chip">世界史</span>
+                    <span class="chip">气候</span>
+                    <span class="chip">地形</span>
+                    <span class="chip">法治</span>
+                    <!-- 第二组（克隆：内容必须与第一组完全一致，才能无缝衔接） -->
+                    <span class="chip">阅读理解</span>
+                    <span class="chip">写作</span>
+                    <span class="chip">函数</span>
+                    <span class="chip">几何</span>
+                    <span class="chip">概率</span>
+                    <span class="chip">方程</span>
+                    <span class="chip">语法</span>
+                    <span class="chip">词汇</span>
+                    <span class="chip">听力</span>
+                    <span class="chip">力学</span>
+                    <span class="chip">电学</span>
+                    <span class="chip">光学</span>
+                    <span class="chip">方程式</span>
+                    <span class="chip">元素周期</span>
+                    <span class="chip">实验</span>
+                    <span class="chip">遗传</span>
+                    <span class="chip">细胞</span>
+                    <span class="chip">生态</span>
+                    <span class="chip">近代史</span>
+                    <span class="chip">世界史</span>
+                    <span class="chip">气候</span>
+                    <span class="chip">地形</span>
+                    <span class="chip">法治</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
