@@ -23,10 +23,7 @@ class Marquee {
    * @param {Object} options - 配置项
    */
   constructor(selector, options = {}) {
-    this.element =
-      typeof selector === "string"
-        ? document.querySelector(selector)
-        : selector;
+    this.element = typeof selector === "string" ? document.querySelector(selector) : selector;
     if (!this.element) return;
 
     // 生成唯一ID，用于标识样式标签
@@ -70,8 +67,7 @@ class Marquee {
 
     // 创建两组相同的内容以实现无缝衔接
     this.group1 = document.createElement("div");
-    this.group1.style.cssText =
-      "display: inline-flex; align-items: center; gap: inherit;";
+    this.group1.style.cssText = "display: inline-flex; align-items: center; gap: inherit;";
     this.group1.innerHTML = originalContent;
 
     this.group2 = this.group1.cloneNode(true);
@@ -102,9 +98,7 @@ class Marquee {
     const animationName = `${this.id}-${this.options.direction}`;
     // 根据方向生成 keyframes
     const keyframes =
-      this.options.direction === "left"
-        ? `@keyframes ${animationName} { from { transform: translateX(0); } to { transform: translateX(-${groupWidth}px); } }`
-        : `@keyframes ${animationName} { from { transform: translateX(-${groupWidth}px); } to { transform: translateX(0); } }`;
+      this.options.direction === "left" ? `@keyframes ${animationName} { from { transform: translateX(0); } to { transform: translateX(-${groupWidth}px); } }` : `@keyframes ${animationName} { from { transform: translateX(-${groupWidth}px); } to { transform: translateX(0); } }`;
 
     // 移除旧的样式标签（如果存在）
     const oldStyle = document.getElementById(this.id);

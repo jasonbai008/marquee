@@ -19,10 +19,7 @@ class Marquee {
     };
 
     // 获取容器元素
-    this.container =
-      typeof selector === "string"
-        ? document.querySelector(selector)
-        : selector;
+    this.container = typeof selector === "string" ? document.querySelector(selector) : selector;
 
     if (!this.container) {
       throw new Error("Marquee container not found");

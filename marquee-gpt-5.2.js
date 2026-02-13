@@ -28,8 +28,7 @@
      */
     constructor(target, options) {
       /** @type {HTMLElement|null} */
-      this.root =
-        typeof target === "string" ? document.querySelector(target) : target;
+      this.root = typeof target === "string" ? document.querySelector(target) : target;
       if (!this.root) throw new Error("Marquee: target not found");
 
       this.options = Object.assign(
@@ -110,12 +109,9 @@
       this._trackEl.style.animation = `${this._animationName} ${duration}s linear infinite`;
 
       // 新增这一句：向右时反向播放（从 -distance 开始），避免左侧空白
-      this._trackEl.style.animationDirection =
-        this.options.direction === "right" ? "reverse" : "normal";
+      this._trackEl.style.animationDirection = this.options.direction === "right" ? "reverse" : "normal";
 
-      this._trackEl.style.animationPlayState = this._started
-        ? "running"
-        : "paused";
+      this._trackEl.style.animationPlayState = this._started ? "running" : "paused";
     }
 
     /**
@@ -127,21 +123,17 @@
       if (this.root && this._groupEl) {
         // 关键：把原内容从 group 搬回 root
         const frag = document.createDocumentFragment();
-        while (this._groupEl.firstChild)
-          frag.appendChild(this._groupEl.firstChild);
+        while (this._groupEl.firstChild) frag.appendChild(this._groupEl.firstChild);
         this.root.innerHTML = "";
         this.root.appendChild(frag);
         this.root.style.overflow = "";
         delete this.root.dataset.marqueeId;
 
-        if (this._onEnter)
-          this.root.removeEventListener("mouseenter", this._onEnter);
-        if (this._onLeave)
-          this.root.removeEventListener("mouseleave", this._onLeave);
+        if (this._onEnter) this.root.removeEventListener("mouseenter", this._onEnter);
+        if (this._onLeave) this.root.removeEventListener("mouseleave", this._onLeave);
       }
 
-      if (this._styleEl && this._styleEl.parentNode)
-        this._styleEl.parentNode.removeChild(this._styleEl);
+      if (this._styleEl && this._styleEl.parentNode) this._styleEl.parentNode.removeChild(this._styleEl);
 
       this._styleEl = null;
       this._trackEl = null;
@@ -232,8 +224,7 @@
         document.head.appendChild(this._styleEl);
       }
       // 关键：基础样式 + keyframes 一起写入，保证不互相覆盖
-      this._styleEl.textContent =
-        (this._baseCss || "") + (this._keyframesCss || "");
+      this._styleEl.textContent = (this._baseCss || "") + (this._keyframesCss || "");
     }
   }
 

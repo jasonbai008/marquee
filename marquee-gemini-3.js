@@ -1,9 +1,6 @@
 class Marquee {
   constructor(selector, options) {
-    this.el =
-      typeof selector === "string"
-        ? document.querySelector(selector)
-        : selector;
+    this.el = typeof selector === "string" ? document.querySelector(selector) : selector;
     if (!this.el) return;
 
     this.options = Object.assign(
@@ -61,10 +58,7 @@ class Marquee {
     this.el.style.overflow = "hidden";
     // 为了配合 index.html 的 CSS 选择器 [data-marquee-id]
     if (!this.el.hasAttribute("data-marquee-id")) {
-      this.el.setAttribute(
-        "data-marquee-id",
-        Math.random().toString(36).substring(2),
-      );
+      this.el.setAttribute("data-marquee-id", Math.random().toString(36).substring(2));
     }
 
     this.track = track;
