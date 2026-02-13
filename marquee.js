@@ -23,7 +23,10 @@ class Marquee {
    * @param {Object} options - 配置项
    */
   constructor(selector, options = {}) {
-    this.element = typeof selector === "string" ? document.querySelector(selector) : selector;
+    this.element =
+      typeof selector === "string"
+        ? document.querySelector(selector)
+        : selector;
     if (!this.element) return;
 
     // 生成唯一ID，用于标识样式标签
@@ -67,7 +70,8 @@ class Marquee {
 
     // 创建两组相同的内容以实现无缝衔接
     this.group1 = document.createElement("div");
-    this.group1.style.cssText = "display: inline-flex; align-items: center; gap: inherit;";
+    this.group1.style.cssText =
+      "display: inline-flex; align-items: center; gap: inherit;";
     this.group1.innerHTML = originalContent;
 
     this.group2 = this.group1.cloneNode(true);
@@ -81,8 +85,22 @@ class Marquee {
 
     // 绑定悬停暂停事件
     if (this.options.pauseOnHover) {
-      this.element.addEventListener("mouseenter", () => this.pause());
-      this.element.addEventListener("mouseleave", () => this.resume());
+      // 获取所有子元素（包括克隆组的）
+      const children = [...this.group1.children, ...this.group2.children];
+
+      // 如果有子元素，则绑定事件到单个元素上
+      if (children.length > 0) {
+        children.forEach((child) => {
+          child.addEventListener("mouseenter", () => this.pause());
+          child.addEventListener("mouseleave", () => this.resume());
+        });
+      } else {
+        // 如果没有子元素（例如纯文本），则绑定到内容组上，保持基本功能
+        this.group1.addEventListener("mouseenter", () => this.pause());
+        this.group1.addEventListener("mouseleave", () => this.resume());
+        this.group2.addEventListener("mouseenter", () => this.pause());
+        this.group2.addEventListener("mouseleave", () => this.resume());
+      }
     }
   }
 
@@ -98,7 +116,9 @@ class Marquee {
     const animationName = `${this.id}-${this.options.direction}`;
     // 根据方向生成 keyframes
     const keyframes =
-      this.options.direction === "left" ? `@keyframes ${animationName} { from { transform: translateX(0); } to { transform: translateX(-${groupWidth}px); } }` : `@keyframes ${animationName} { from { transform: translateX(-${groupWidth}px); } to { transform: translateX(0); } }`;
+      this.options.direction === "left"
+        ? `@keyframes ${animationName} { from { transform: translateX(0); } to { transform: translateX(-${groupWidth}px); } }`
+        : `@keyframes ${animationName} { from { transform: translateX(-${groupWidth}px); } to { transform: translateX(0); } }`;
 
     // 移除旧的样式标签（如果存在）
     const oldStyle = document.getElementById(this.id);
